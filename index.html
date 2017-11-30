@@ -1,0 +1,274 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <style>
+      canvas {
+        max-width: 100%;
+        border: 1px solid #ededed;
+      }
+      .form-inline input {
+        max-width: 90px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">      
+        <div class="col-md-4 well">
+          <div class="form-group">
+            <label>Choose a file: </label>
+            <input type="file" accept="image/*"/>
+          </div>
+          <div class="panel panel-default">
+            <div class="panel-body">
+
+              <h4>Filters: </h4>
+
+              <div class="checkbox">
+                <label for="invert">
+                  <input type="checkbox" class="filter invert" id="invert" value="invert"/>
+                  &nbsp;
+                  Invert
+                </label>
+              </div>
+
+              <div class="checkbox">
+                <label for="grayscale">
+                  <input type="checkbox" class="filter grayscale" id="grayscale" value="grayscale"/>
+                  &nbsp;
+                  Grayscale
+                </label>
+              </div>
+
+              <div class="checkbox">
+                <label for="sepia">
+                  <input type="checkbox" class="filter sepia" id="sepia" value="sepia"/>
+                  &nbsp;
+                  Sepia  
+                </label>  
+              </div>              
+
+              <div>
+                <div class="checkbox">
+                  <label for="noise">
+                    <input type="checkbox" class="filter noise" id="noise" value="noise"/>
+                    &nbsp;
+                    Noise
+                  </label>
+                </div>
+                <div class="form-group noise-options">
+                  <label for="factor">Factor: </label>
+                  <input type="range" min="1" max="100" id="factor"/>
+                </div>
+              </div>
+
+              <div>
+                <div class="checkbox">
+                  <label for="brightness">
+                    <input type="checkbox" class="filter brightness" id="brightness" value="brightness"/>
+                    &nbsp;
+                    Brightness
+                  </label>
+                </div>
+                <div class="form-group brightness-options">
+                  <label for="adjustement">Adjustement: </label>
+                  <input type="range" min="1" max="100" id="adjustement"/>
+                </div>
+              </div>
+
+              <div>
+                <div class="checkbox">
+                  <label for="blackandwhite">
+                    <input type="checkbox" class="filter blackandwhite" id="blackandwhite" value="blackAndWhite"/>
+                    &nbsp;
+                    Black and white
+                  </label>
+                </div>
+                <div class="form-group blackandwhite-options">
+                  <label for="threshold">Threshold: </label>
+                  <input type="range" min="1" max="255" id="threshold"/>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="panel panel-default">
+            <div class="panel-body">
+              <h4>Size & position: </h4>
+
+              <div class="form-group">
+                <label>Working plan size: </label>
+                <div class="form-inline">
+                  <input class="form-control" type="number" id="canvasW" placeholder="width"/>
+                  x
+                  <input class="form-control" type="number" id="canvasH" placeholder="height"/>
+                  pixels
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Image positions: </label>
+                <div class="form-inline">
+                  <input class="form-control" type="number" id="imgPosX" placeholder="X"/>
+                  <input class="form-control" type="number" id="imgPosY" placeholder="Y"/>
+                  pixels
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <a class="btn btn-primary">Export</a>
+          </div>      
+        </div>
+        <div class="col-md-8">
+          <div class="panel panel-default">
+            <div class="panel-heading">Preview</div>
+            <div class="panel-body">
+              <canvas id="preview"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <script src="./filters.js"></script>
+    <script type="text/javascript">
+      /*** INIT ***/
+      var $input = document.querySelector('input');
+      var $inputsFilter = slice(document.querySelectorAll('.filter[type="checkbox"]'));
+      var $canvas = document.querySelector('canvas');
+      var $factor = document.querySelector('#factor');
+      var $adjustement = document.querySelector('#adjustement');
+      var $threshold = document.querySelector('#threshold');
+      var $link = document.querySelector('a');
+      var $button = document.querySelector('button');
+      var $inputCanW = document.querySelector('input#canvasW');
+      var $inputCanH = document.querySelector('input#canvasH');
+      var $inputImgPosX = document.querySelector('input#imgPosX');
+      var $inputImgPosY = document.querySelector('input#imgPosY');
+      var filters = new Filters();
+
+      $input.addEventListener('change', handler);
+
+      $inputsFilter.forEach(function($inputFilter) {
+        $inputFilter.addEventListener('change', handler);
+      })
+      $factor.addEventListener('change', handler);
+      $adjustement.addEventListener('change', handler);
+      $threshold.addEventListener('change', handler);
+      $inputCanW.addEventListener('change', handler);
+      $inputCanH.addEventListener('change', handler);
+      $inputImgPosX.addEventListener('change', handler);
+      $inputImgPosY.addEventListener('change', handler);
+      $link.addEventListener('click', download);
+      /************/
+
+      function handler() {
+        var $inputsFilterChecked = getAllInputsFilterActivate();
+
+        renderImg(function() {
+          $inputsFilterChecked.forEach(function($inputFilterChecked) {
+            var value = $inputFilterChecked.value;
+
+            runFilter(value);
+          })
+        });
+      }
+
+      function slice(args) {
+        return Array.prototype.slice.call(args);
+      }
+
+      function getAllInputsFilterActivate() {
+        return slice(document.querySelectorAll('.filter[type="checkbox"]:checked'));
+      }
+
+      function readFile($input, cb) {       
+        if ($input.files && $input.files[0]) {
+          var reader = new FileReader();
+
+          reader.onload = function(e) {
+            cb(e.target.result)
+          }
+
+          reader.readAsDataURL($input.files[0]);
+        }
+      }
+      
+      function runFilter(filter) {           
+        var ctx = $canvas.getContext('2d');
+        var arg = null;
+
+        if (filter == 'brightness') {
+          arg = parseInt($adjustement.value, 10);
+        } else if (filter == 'blackAndWhite') {
+          arg = parseInt($threshold.value, 10)
+        } else if (filter == 'noise') {
+          arg = parseInt($factor.value, 10)
+        }
+
+        var imgData = filterImage(filters[filter], arg);
+
+        ctx.putImageData(imgData, 0, 0);
+      }
+
+      function renderImg(cb) {       
+        readFile($input, function(result) {
+          var img = new Image();
+
+          img.onload = function() {     
+            var w = parseInt($inputCanW.value, 10) || img.width;
+            var h = parseInt($inputCanH.value, 10) || img.height; 
+            var x = parseInt($inputImgPosX.value, 10) || 0;
+            var y = parseInt($inputImgPosY.value, 10) || 0;      
+            var c = getCanvas(w, h);
+            var ctx = c.getContext('2d');
+
+            $inputCanW.value = w;
+            $inputCanH.value = h;
+            $inputImgPosX.value = x;
+            $inputImgPosY.value = y;
+
+            ctx.drawImage(img, x, y);
+
+            if (cb) cb();
+          }
+
+          img.src = result;
+        })
+      }
+
+      function getPixels() {
+        var ctx = $canvas.getContext('2d');
+
+        return ctx.getImageData(0,0, $canvas.width, $canvas.height);
+      }
+
+      function getCanvas(w, h) {
+        var c = document.querySelector('canvas');
+        
+        c.width = w;
+        c.height = h;
+
+        return c;
+      }
+
+      function filterImage(filter, var_args) {
+        var args = [getPixels()];
+
+        for(var i = 1; i < arguments.length; i++) {
+          args.push(arguments[i]);
+        }
+
+        return filter.apply(null, args);
+      }
+
+      function download() {
+        $link.href = $canvas.toDataURL('image/jpg');
+        $link.download = 'output.jpg'
+      }
+    </script>
+  </body>
+</html>
