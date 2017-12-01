@@ -20,87 +20,95 @@
   <body>
     <div class="container">
       <div class="row">      
-        <div class="col-md-4 well">
-          <div class="form-group">
-            <label>Choose a file: </label>
-            <input type="file" accept="image/*"/>
-          </div>
-
-          <div class="panel panel-primary">
-            <div class="panel-heading" data-toggle="collapse" data-target="#collapseDimension" aria-expanded="true" aria-controls="collapseDimension">
-              <h4 class="panel-title">
-                Size & position
-              </h4>
+        <div class="col-md-4">
+          <div class="well">
+            <div class="form-group">
+              <label for="file">Choose a file: </label>
+              <input type="file" accept="image/*" id="file"/>
             </div>
-            <div class="panel-body collapse in" id="collapseDimension">
-              <div class="form-group">
-                <label>Working plan size: </label>
-                <div class="form-inline">
-                  <input class="form-control" type="number" id="canvasW" placeholder="width"/>
-                  x
-                  <input class="form-control" type="number" id="canvasH" placeholder="height"/>
-                  pixels
+  
+            <div class="panel panel-primary">
+              <div class="panel-heading" data-toggle="collapse" data-target="#collapseDimension" aria-expanded="true" aria-controls="collapseDimension">
+                <h4 class="panel-title">
+                  Size & position
+                </h4>
+              </div>
+              <div class="panel-body collapse in" id="collapseDimension">
+                <div class="form-group">
+                  <label>Working plan size: </label>
+                  <div class="form-inline">
+                    <input class="form-control" type="number" id="canvasW" placeholder="width"/>
+                    x
+                    <input class="form-control" type="number" id="canvasH" placeholder="height"/>
+                    pixels
+                  </div>
+                </div>
+  
+                <div class="form-group">
+                  <label>Image size: </label>
+                  <div class="form-inline">
+                    <input class="form-control" type="number" id="imgW" placeholder="width"/>
+                    x
+                    <input class="form-control" type="number" id="imgH" placeholder="height"/>
+                    pixels
+                  </div>
+                  <div class="checkbox">
+                    <label for="aspectRatio">
+                      <input type="checkbox" id="aspectRatio"/>
+                      &nbsp;
+                      keep aspect ratio
+                    </label>
+                  </div>
+                </div>
+  
+                <div class="form-group">
+                  <label>Image positions: </label>
+                  <div class="form-inline">
+                    <input class="form-control" type="number" id="imgPosX" placeholder="X"/>
+                    <input class="form-control" type="number" id="imgPosY" placeholder="Y"/>
+                    pixels
+                  </div>
                 </div>
               </div>
-
-              <div class="form-group">
-                <label>Image size: </label>
-                <div class="form-inline">
-                  <input class="form-control" type="number" id="imgW" placeholder="width"/>
-                  x
-                  <input class="form-control" type="number" id="imgH" placeholder="height"/>
-                  pixels
-                </div>
+            </div>
+  
+            <div class="panel panel-primary">
+              <div class="panel-heading" data-toggle="collapse" data-target="#collapseFilters" ria-expanded="false" aria-controls="collapseFilters">
+                <h4 class="panel-title">Filters</h4>
+              </div>
+              <div class="panel-body collapse" id="collapseFilters">
                 <div class="checkbox">
-                  <label for="aspectRatio">
-                    <input type="checkbox" id="aspectRatio"/>
+                  <label for="invert">
+                    <input type="checkbox" class="filter invert" id="invert" value="invert"/>
                     &nbsp;
-                    keep aspect ratio
+                    Invert
                   </label>
                 </div>
-              </div>
-
-              <div class="form-group">
-                <label>Image positions: </label>
-                <div class="form-inline">
-                  <input class="form-control" type="number" id="imgPosX" placeholder="X"/>
-                  <input class="form-control" type="number" id="imgPosY" placeholder="Y"/>
-                  pixels
+  
+                <div class="checkbox">
+                  <label for="grayscale">
+                    <input type="checkbox" class="filter grayscale" id="grayscale" value="grayscale"/>
+                    &nbsp;
+                    Grayscale
+                  </label>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel panel-primary">
-            <div class="panel-heading" data-toggle="collapse" data-target="#collapseFilters" ria-expanded="false" aria-controls="collapseFilters">
-              <h4 class="panel-title">Filters</h4>
-            </div>
-            <div class="panel-body collapse" id="collapseFilters">
-              <div class="checkbox">
-                <label for="invert">
-                  <input type="checkbox" class="filter invert" id="invert" value="invert"/>
-                  &nbsp;
-                  Invert
-                </label>
-              </div>
-
-              <div class="checkbox">
-                <label for="grayscale">
-                  <input type="checkbox" class="filter grayscale" id="grayscale" value="grayscale"/>
-                  &nbsp;
-                  Grayscale
-                </label>
-              </div>
-
-              <div class="checkbox">
-                <label for="sepia">
-                  <input type="checkbox" class="filter sepia" id="sepia" value="sepia"/>
-                  &nbsp;
-                  Sepia  
-                </label>  
-              </div>              
-
-              <div>
+  
+                <div class="checkbox">
+                  <label for="sepia">
+                    <input type="checkbox" class="filter sepia" id="sepia" value="sepia"/>
+                    &nbsp;
+                    Sepia  
+                  </label>  
+                </div>    
+                
+                <div class="checkbox">
+                  <label for="blur">
+                    <input type="checkbox" class="filter blur" id="blur" value="blur"/>
+                    &nbsp;
+                    Blur
+                  </label>
+                </div>
+  
                 <div class="checkbox">
                   <label for="noise">
                     <input type="checkbox" class="filter noise" id="noise" value="noise"/>
@@ -108,13 +116,7 @@
                     Noise
                   </label>
                 </div>
-                <div class="form-group noise-options">
-                  <label for="factor">Factor: </label>
-                  <input type="range" min="1" max="100" id="factor"/>
-                </div>
-              </div>
-
-              <div>
+  
                 <div class="checkbox">
                   <label for="brightness">
                     <input type="checkbox" class="filter brightness" id="brightness" value="brightness"/>
@@ -122,13 +124,7 @@
                     Brightness
                   </label>
                 </div>
-                <div class="form-group brightness-options">
-                  <label for="adjustement">Adjustement: </label>
-                  <input type="range" min="1" max="100" id="adjustement"/>
-                </div>
-              </div>
-
-              <div>
+  
                 <div class="checkbox">
                   <label for="blackandwhite">
                     <input type="checkbox" class="filter blackandwhite" id="blackandwhite" value="blackAndWhite"/>
@@ -136,17 +132,52 @@
                     Black and white
                   </label>
                 </div>
-                <div class="form-group blackandwhite-options">
-                  <label for="threshold">Threshold: </label>
-                  <input type="range" min="1" max="255" id="threshold"/>
+  
+                <div class="panel panel-default">
+                  <div class="panel-heading">
+                    <div class="panel-title">
+                      <small>Noise adjustement</small>
+                    </div>
+                  </div>
+                  <div class="panel-body">                  
+                    <div class="form-group noise-options">
+                      <input type="range" min="1" max="100" id="factor"/>
+                    </div>
+                  </div>
+                </div>
+  
+                <div class="panel panel-default">
+                  <div class="panel-heading">
+                    <div class="panel-title">
+                      <small>Brightness adjustement</small>
+                    </div>
+                  </div>
+                  <div class="panel-body">                 
+                    <div class="form-group brightness-options">
+                      <input type="range" min="1" max="100" id="adjustement"/>
+                    </div>
+                  </div>
+                </div>
+  
+                <div class="panel panel-default">
+                  <div class="panel-heading">
+                    <div class="panel-title">
+                      <small>Black and white adjustement</small>
+                    </div>
+                  </div>
+                  <div class="panel-body">
+                    <div class="form-group blackandwhite-options">
+                      <input type="range" min="1" max="255" id="threshold"/>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
+  
+            <div class="form-group">
+              <a class="btn btn-primary">Export</a>
+            </div>      
           </div>
-
-          <div class="form-group">
-            <a class="btn btn-primary">Export</a>
-          </div>      
         </div>
         <div class="col-md-8">
           <div class="panel panel-default">
@@ -311,8 +342,8 @@
       }
 
       function download() {
-        $link.href = $canvas.toDataURL('image/jpg');
-        $link.download = 'output.jpg'
+        $link.href = $canvas.toDataURL('image/png');
+        $link.download = 'output.png'
       }
     </script>
   </body>
