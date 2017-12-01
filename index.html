@@ -1,13 +1,19 @@
 <html>
   <head>
+    <title>Image Tools</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <style>
       canvas {
+        display: block;
+        margin: 0 auto;
         max-width: 100%;
         border: 1px solid #ededed;
       }
       .form-inline input {
         max-width: 90px;
+      }
+      .panel-primary .panel-heading {
+        cursor: pointer;
       }
     </style>
   </head>
@@ -19,11 +25,57 @@
             <label>Choose a file: </label>
             <input type="file" accept="image/*"/>
           </div>
-          <div class="panel panel-default">
-            <div class="panel-body">
 
-              <h4>Filters: </h4>
+          <div class="panel panel-primary">
+            <div class="panel-heading" data-toggle="collapse" data-target="#collapseDimension" aria-expanded="true" aria-controls="collapseDimension">
+              <h4 class="panel-title">
+                Size & position
+              </h4>
+            </div>
+            <div class="panel-body collapse in" id="collapseDimension">
+              <div class="form-group">
+                <label>Working plan size: </label>
+                <div class="form-inline">
+                  <input class="form-control" type="number" id="canvasW" placeholder="width"/>
+                  x
+                  <input class="form-control" type="number" id="canvasH" placeholder="height"/>
+                  pixels
+                </div>
+              </div>
 
+              <div class="form-group">
+                <label>Image size: </label>
+                <div class="form-inline">
+                  <input class="form-control" type="number" id="imgW" placeholder="width"/>
+                  x
+                  <input class="form-control" type="number" id="imgH" placeholder="height"/>
+                  pixels
+                </div>
+                <div class="checkbox">
+                  <label for="aspectRatio">
+                    <input type="checkbox" id="aspectRatio"/>
+                    &nbsp;
+                    keep aspect ratio
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Image positions: </label>
+                <div class="form-inline">
+                  <input class="form-control" type="number" id="imgPosX" placeholder="X"/>
+                  <input class="form-control" type="number" id="imgPosY" placeholder="Y"/>
+                  pixels
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel panel-primary">
+            <div class="panel-heading" data-toggle="collapse" data-target="#collapseFilters" ria-expanded="false" aria-controls="collapseFilters">
+              <h4 class="panel-title">Filters</h4>
+            </div>
+            <div class="panel-body collapse" id="collapseFilters">
               <div class="checkbox">
                 <label for="invert">
                   <input type="checkbox" class="filter invert" id="invert" value="invert"/>
@@ -91,30 +143,7 @@
               </div>
             </div>
           </div>
-          <div class="panel panel-default">
-            <div class="panel-body">
-              <h4>Size & position: </h4>
 
-              <div class="form-group">
-                <label>Working plan size: </label>
-                <div class="form-inline">
-                  <input class="form-control" type="number" id="canvasW" placeholder="width"/>
-                  x
-                  <input class="form-control" type="number" id="canvasH" placeholder="height"/>
-                  pixels
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label>Image positions: </label>
-                <div class="form-inline">
-                  <input class="form-control" type="number" id="imgPosX" placeholder="X"/>
-                  <input class="form-control" type="number" id="imgPosY" placeholder="Y"/>
-                  pixels
-                </div>
-              </div>
-            </div>
-          </div>
           <div class="form-group">
             <a class="btn btn-primary">Export</a>
           </div>      
@@ -146,6 +175,9 @@
       var $button = document.querySelector('button');
       var $inputCanW = document.querySelector('input#canvasW');
       var $inputCanH = document.querySelector('input#canvasH');
+      var $inputImgRatio = document.querySelector('input#aspectRatio');
+      var $inputImgW = document.querySelector('input#imgW');
+      var $inputImgH = document.querySelector('input#imgH');
       var $inputImgPosX = document.querySelector('input#imgPosX');
       var $inputImgPosY = document.querySelector('input#imgPosY');
       var filters = new Filters();
@@ -160,9 +192,13 @@
       $threshold.addEventListener('change', handler);
       $inputCanW.addEventListener('change', handler);
       $inputCanH.addEventListener('change', handler);
+      $inputImgW.addEventListener('change', handler);
+      $inputImgH.addEventListener('change', handler);
+      $inputImgRatio.addEventListener('change', handler);
       $inputImgPosX.addEventListener('change', handler);
       $inputImgPosY.addEventListener('change', handler);
       $link.addEventListener('click', download);
+
       /************/
 
       function handler() {
@@ -218,20 +254,29 @@
         readFile($input, function(result) {
           var img = new Image();
 
-          img.onload = function() {     
-            var w = parseInt($inputCanW.value, 10) || img.width;
-            var h = parseInt($inputCanH.value, 10) || img.height; 
+          img.onload = function() {
+            var ratio = img.height / img.width;
+            var w = parseInt($inputImgW.value, 10) || img.width;
+            var h = parseInt($inputImgH.value, 10) || img.height;
+            var cw = parseInt($inputCanW.value, 10) || img.width;
+            var ch = parseInt($inputCanH.value, 10) || img.height; 
             var x = parseInt($inputImgPosX.value, 10) || 0;
             var y = parseInt($inputImgPosY.value, 10) || 0;      
-            var c = getCanvas(w, h);
+            var c = getCanvas(cw, ch);
             var ctx = c.getContext('2d');
 
-            $inputCanW.value = w;
-            $inputCanH.value = h;
+            if ($inputImgRatio.checked) {
+              h = w * ratio;
+            }
+
+            $inputImgW.value = w;
+            $inputImgH.value = h;
+            $inputCanW.value = cw;
+            $inputCanH.value = ch;
             $inputImgPosX.value = x;
             $inputImgPosY.value = y;
 
-            ctx.drawImage(img, x, y);
+            ctx.drawImage(img, x, y, w, h);
 
             if (cb) cb();
           }

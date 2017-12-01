@@ -86,108 +86,113 @@ Filters.prototype.blackAndWhite = function(pixels, threshold) {
 };
 
 Filters.prototype.blur = function(pixels) {
-  var m = [[1, 1, 1], [1, 1, 1], [1, 1, 1]];
+  var m = [
+    [1, 1, 1], 
+    [1, 1, 1], 
+    [1, 1, 1]
+  ];
 
   return convolve(pixels, m);
 };
 
 Filters.prototype.sharpen = function(pixels) {
-  var m = [[0, -3, 0], [-3, 21, -3], [0, -3, 0]];
+  var m = [
+    [0, -2, 0], 
+    [-2, 11, -2], 
+    [0, -2, 0]
+  ];
 
   return convolve(pixels, m);
 }
 
 Filters.prototype.emboss = function(pixels) {
-  var m = [[-18, -9, 0], [-9, 9, 9], [0, 9, 18]];
+  var m = [
+    [2, 0, 0], 
+    [0, -1, 0], 
+    [0, 0, -1]
+  ];
 
-  return convolve(pixels, m);
+  return convolve(pixels, m, 127);
 }
 
 Filters.prototype.lighten = function(pixels) {
-  var m = [[0, 0, 0], [0, 12, 0], [0, 0, 0]];
+  var m = [
+    [0, 0, 0], 
+    [0, 12, 0], 
+    [0, 0, 0]
+  ];
 
   return convolve(pixels, m);
 }
 
 Filters.prototype.darken = function(pixels) {
-  var m = [[0, 0, 0], [0, 6, 0], [0, 0, 0]];
+  var m = [
+    [0, 0, 0], 
+    [0, 6, 0], 
+    [0, 0, 0]
+  ];
 
   return convolve(pixels, m);
 }
 
 Filters.prototype.edge = function(pixels) {
-  var m = [[0, 9, 0], [9, -36, 9], [0, 9, 0]];
+  var m = [
+    [1, 1, 1], 
+    [1, -7, 1], 
+    [1, 1, 1]
+  ]
 
   return convolve(pixels, m);
 }
 
 Filters.prototype.identity = function(pixels) {
-  var m = [[0, 0, 0], [0, 9, 0], [0, 0, 0]];
+  var m = [
+    [0, 0, 0], 
+    [0, 9, 0], 
+    [0, 0, 0]
+  ];
 
   return convolve(pixels, m);
 }
 
-Filters.prototype.mikesfav = function(pixels) {
-  var m = [[2, 22, 1], [22, 1, -22], [1, -22, -2]];
-
-  return convolve(pixels, m);
-};
-
-function convolve(pixels, matrix) {
+function convolve(pixels, matrix, offset) {
   var d = pixels.data;
-  var sum = 0;
+  var len = d.length;
+  var m = [].concat(matrix[0], matrix[1], matrix[2]);
+  var res = 0;
   var w = pixels.width;
-  var h = pixels.height;
-  var chanIndex;
 
-  for (var r = 1; r < w - 1; r++) {
-    var centerRedIndex = r * w * 4;
-
-    centerRedIndex += 4;
-
-    var upRedIndex = centerRedIndex - w * 4;
-    var downRedIndex = centerRedIndex + w * 4;
-
-    for (var c = 1; c < h - 1; c++) {
-      for (var y = 0; y < 3; y++) {
-        sum = 0;
-
-        chanIndex = upRedIndex - 4 + y;
-        sum += d[chanIndex] * matrix[0][0];
-
-        chanIndex += 4;
-        sum += d[chanIndex] * matrix[0][1];
-
-        chanIndex += 4;
-        sum += d[chanIndex] * matrix[0][2];
-
-        chanIndex = centerRedIndex - 4 + y;
-        sum += d[chanIndex] * matrix[1][0];
-
-        chanIndex += 4;
-        sum += d[chanIndex] * matrix[1][1];
-
-        chanIndex += 4;
-        sum += d[chanIndex] * matrix[1][2];
-
-        chanIndex = downRedIndex - 4 + y;
-        sum += d[chanIndex] * matrix[2][0];
-
-        chanIndex += 4;
-        sum += d[chanIndex] * matrix[2][1];
-
-        chanIndex += 4;
-        sum += d[chanIndex] * matrix[2][2];
-
-        sum /= 9;
-        sum = Math.min(Math.max(sum, 0), 255);
-
-        d[centerRedIndex + y] = sum;
-      }
-      centerRedIndex += 4;
-      upRedIndex += 4;
-      downRedIndex += 4;
+  for (var i = 0; i < len; i++) {
+    if((i + 1) % 4 === 0) {
+      continue;
     }
+
+    res = 0;
+    var these = [
+      d[i - w * 4 - 4] || d[i],
+      d[i - w * 4]     || d[i],
+      d[i - w * 4 + 4] || d[i],
+      d[i - 4]         || d[i],
+      d[i],
+      d[i + 4]         || d[i],
+      d[i + w * 4 - 4] || d[i],
+      d[i + w * 4]     || d[i],
+      d[i + w * 4 + 4] || d[i]
+    ];
+
+    for(var j = 0; j < 9; j++) {
+      res += these[j] * m[j];
+    }
+
+    res /= 9;
+    
+    if (offset) {
+      res += offset;
+    }
+
+    res = Math.min(Math.max(res, 0), 255);
+
+    d[i] = res
   }
 
   return pixels;
