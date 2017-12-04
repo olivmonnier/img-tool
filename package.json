@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "gulp htmlminify"
+    "build": "gulp"
   },
   "repository": {
     "type": "git",
@@ -18,7 +18,9 @@
   },
   "homepage": "https://github.com/olivmonnier/single-file#readme",
   "dependencies": {
+    "del": "^3.0.0",
     "gulp": "^3.9.1",
-    "gulp-htmlmin": "^3.0.0"
+    "gulp-htmlmin": "^3.0.0",
+    "run-sequence": "^2.2.0"
   }
 }
