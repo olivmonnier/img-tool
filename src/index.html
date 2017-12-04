@@ -1,6 +1,7 @@
 <html>
   <head>
     <title>Image Tools</title>
+    <meta content="width=device-width,initial-scale=1" name="viewport">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <style>
       canvas {
@@ -18,9 +19,9 @@
     </style>
   </head>
   <body>
-    <div class="container">
+    <div class="container-fluid">
       <div class="row">      
-        <div class="col-md-4">
+        <div class="col-sm-4 col-md-3">
           <div class="well">
             <div class="form-group">
               <label for="file">Choose a file: </label>
@@ -34,6 +35,20 @@
                 </h4>
               </div>
               <div class="panel-body collapse in" id="collapseDimension">
+                <div class="form-group">
+                  <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-default" id="imgPosTop">Top</button>
+                    <button type="button" class="btn btn-default" id="imgPosRight">Right</button>
+                    <button type="button" class="btn btn-default" id="imgPosBottom">Bottom</button>
+                    <button type="button" class="btn btn-default" id="imgPosLeft">Left</button>                
+                  </div>
+  
+                  <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-default" id="imgPosCenter">Horizontal center</button>
+                    <button type="button" class="btn btn-default" id="imgPosVCenter">Vertical center</button>
+                  </div>
+                </div>
+
                 <div class="form-group">
                   <label>Working plan size: </label>
                   <div class="form-inline">
@@ -68,6 +83,11 @@
                     <input class="form-control" type="number" id="imgPosY" placeholder="Y"/>
                     pixels
                   </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Image rotation: </label>
+                  <input class="form-control" type="number" id="imgRotate" placeholder="Rotate"/>
                 </div>
               </div>
             </div>
@@ -179,7 +199,7 @@
             </div>      
           </div>
         </div>
-        <div class="col-md-8">
+        <div class="col-sm-8 col-md-9">
           <div class="panel panel-default">
             <div class="panel-heading">Preview</div>
             <div class="panel-body">
@@ -193,47 +213,284 @@
     <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
-    <script src="./filters.js"></script>
     <script type="text/javascript">
       /*** INIT ***/
-      var $input = document.querySelector('input');
-      var $inputsFilter = slice(document.querySelectorAll('.filter[type="checkbox"]'));
-      var $canvas = document.querySelector('canvas');
-      var $factor = document.querySelector('#factor');
-      var $adjustement = document.querySelector('#adjustement');
-      var $threshold = document.querySelector('#threshold');
-      var $link = document.querySelector('a');
-      var $button = document.querySelector('button');
-      var $inputCanW = document.querySelector('input#canvasW');
-      var $inputCanH = document.querySelector('input#canvasH');
-      var $inputImgRatio = document.querySelector('input#aspectRatio');
-      var $inputImgW = document.querySelector('input#imgW');
-      var $inputImgH = document.querySelector('input#imgH');
-      var $inputImgPosX = document.querySelector('input#imgPosX');
-      var $inputImgPosY = document.querySelector('input#imgPosY');
-      var filters = new Filters();
-
-      $input.addEventListener('change', handler);
-
-      $inputsFilter.forEach(function($inputFilter) {
+      els('.filter[type="checkbox"]').forEach(function($inputFilter) {
         $inputFilter.addEventListener('change', handler);
       })
-      $factor.addEventListener('change', handler);
-      $adjustement.addEventListener('change', handler);
-      $threshold.addEventListener('change', handler);
-      $inputCanW.addEventListener('change', handler);
-      $inputCanH.addEventListener('change', handler);
-      $inputImgW.addEventListener('change', handler);
-      $inputImgH.addEventListener('change', handler);
-      $inputImgRatio.addEventListener('change', handler);
-      $inputImgPosX.addEventListener('change', handler);
-      $inputImgPosY.addEventListener('change', handler);
-      $link.addEventListener('click', download);
 
+      var selectors = [
+        'input', '#adjustement', '#factor', '#threshold', 'input#canvasW', 'input#canvasH', 
+        'input#imgW', 'input#imgH', 'input#aspectRatio', 'input#imgPosX', 'input#imgPosY',
+        'input#ImgRotate'
+      ];
+
+      selectors.forEach(function(selector) {
+        onChange(selector, handler)
+      })
+
+      onClick('a', download);
+
+      el('button#imgPosTop').addEventListener('click', function() {
+        el('#imgPosY').value = 0;
+        handler();
+      });
+
+      el('button#imgPosRight').addEventListener('click', function() {
+        var workSpaceWidth = el('#canvasW').value;
+        var imgWidth = el('#imgW').value;
+
+        el('#imgPosX').value = workSpaceWidth - imgWidth;
+
+        handler();
+      });
+
+      el('button#imgPosBottom').addEventListener('click', function() {
+        var workSpaceHeight = el('#canvasH').value;
+        var imgHeight = el('#imgH').value;
+
+        el('#imgPosY').value = workSpaceHeight - imgHeight;
+
+        handler();
+      });
+
+      el('button#imgPosLeft').addEventListener('click', function() {
+        el('#imgPosX').value = 0;
+        handler();
+      });
+
+      el('button#imgPosCenter').addEventListener('click', function() {
+        var workSpaceWidth = el('#canvasW').value;
+        var imgWidth = el('#imgW').value;
+
+        el('#imgPosX').value = (workSpaceWidth - imgWidth) / 2;
+
+        handler();
+      });
+
+      el('button#imgPosVCenter').addEventListener('click', function() {
+        var workSpaceHeight = el('#canvasH').value;
+        var imgHeight = el('#imgH').value;
+
+        el('#imgPosY').value = (workSpaceHeight - imgHeight) / 2;
+
+        handler();
+      });
       /************/
 
+      // Filters Algorithm
+        (function (Global) {
+          Global.Filters = {
+            grayscale: function (pixels) {
+              var d = pixels.data;
+
+              for (var i = 0; i < d.length; i += 4) {
+                var r = d[i];
+                var g = d[i + 1];
+                var b = d[i + 2];
+                var v = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+                d[i] = d[i + 1] = d[i + 2] = v;
+              };
+
+              return pixels;
+            },
+            sepia: function (pixels) {
+              var d = pixels.data;
+
+              for (var i = 0; i < d.length; i += 4) {
+                var r = d[i];
+                var g = d[i + 1];
+                var b = d[i + 2];
+                var avg = 0.3 * r + 0.59 * g + 0.11 * b;
+
+                d[i] = avg + 100;
+                d[i + 1] = avg + 50;
+                d[i + 2] = avg;
+              };
+
+              return pixels;
+            },
+            invert: function (pixels) {
+              var d = pixels.data;
+
+              for (var i = 0; i < d.length; i += 4) {
+                d[i] = 255 - d[i];
+                d[i + 1] = 255 - d[i + 1];
+                d[i + 2] = 255 - d[i + 2]
+              };
+
+              return pixels;
+            },
+            brightness: function (pixels, adjustement) {
+              var d = pixels.data;
+
+              for (var i = 0; i < d.length; i += 4) {
+                d[i] += adjustement || 40;
+                d[i + 1] += adjustement || 40;
+                d[i + 2] += adjustement || 40;
+              };
+
+              return pixels;
+            },
+            noise: function (pixels, factor) {
+              var d = pixels.data;
+
+              for (var i = 0; i < d.length; i += 4) {
+                var rand = (0.5 - Math.random()) * factor;
+                d[i] = d[i] + rand;
+                d[i + 1] = d[i + 1] + rand;
+                d[i + 2] = d[i + 2] + rand;
+              };
+
+              return pixels;
+            },
+            blackAndWhite: function (pixels, threshold) {
+              var d = pixels.data;
+
+              for (var i = 0; i < d.length; i += 4) {
+                var r = d[i];
+                var g = d[i + 1];
+                var b = d[i + 2];
+                var v =
+                  0.2126 * r + 0.7152 * g + 0.0722 * b >= (threshold || 128) ? 255 : 0;
+
+                d[i] = d[i + 1] = d[i + 2] = v;
+              };
+
+              return pixels;
+            },
+            blur: function (pixels) {
+              var m = [
+                [1, 1, 1],
+                [1, 1, 1],
+                [1, 1, 1]
+              ];
+
+              return convolve(pixels, m);
+            },
+            sharpen: function (pixels) {
+              var m = [
+                [0, -2, 0],
+                [-2, 11, -2],
+                [0, -2, 0]
+              ];
+
+              return convolve(pixels, m);
+            },
+            emboss: function (pixels) {
+              var m = [
+                [2, 0, 0],
+                [0, -1, 0],
+                [0, 0, -1]
+              ];
+
+              return convolve(pixels, m, 127);
+            },
+            lighten: function (pixels) {
+              var m = [
+                [0, 0, 0],
+                [0, 12, 0],
+                [0, 0, 0]
+              ];
+
+              return convolve(pixels, m);
+            },
+            darken: function (pixels) {
+              var m = [
+                [0, 0, 0],
+                [0, 6, 0],
+                [0, 0, 0]
+              ];
+
+              return convolve(pixels, m);
+            },
+            edge: function (pixels) {
+              var m = [
+                [1, 1, 1],
+                [1, -7, 1],
+                [1, 1, 1]
+              ];
+
+              return convolve(pixels, m);
+            },
+            identity: function (pixels) {
+              var m = [
+                [0, 0, 0],
+                [0, 9, 0],
+                [0, 0, 0]
+              ];
+
+              return convolve(pixels, m);
+            }
+          }
+
+          function convolve(pixels, matrix, offset) {
+            var d = pixels.data;
+            var len = d.length;
+            var m = [].concat(matrix[0], matrix[1], matrix[2]);
+            var res = 0;
+            var w = pixels.width;
+
+            for (var i = 0; i < len; i++) {
+              if ((i + 1) % 4 === 0) {
+                continue;
+              }
+
+              res = 0;
+              var these = [
+                d[i - w * 4 - 4] || d[i],
+                d[i - w * 4] || d[i],
+                d[i - w * 4 + 4] || d[i],
+                d[i - 4] || d[i],
+                d[i],
+                d[i + 4] || d[i],
+                d[i + w * 4 - 4] || d[i],
+                d[i + w * 4] || d[i],
+                d[i + w * 4 + 4] || d[i]
+              ];
+
+              for (var j = 0; j < 9; j++) {
+                res += these[j] * m[j];
+              }
+
+              res /= 9;
+
+              if (offset) {
+                res += offset;
+              }
+
+              res = Math.min(Math.max(res, 0), 255);
+
+              d[i] = res
+            }
+
+            return pixels;
+          };
+        }(window));
+
+      function slice(args) {
+        return Array.prototype.slice.call(args);
+      }
+
+      function el(selector) {
+        return document.querySelector(selector);
+      }
+
+      function els(selector) {
+        return slice(document.querySelectorAll(selector));
+      }
+
+      function onChange(selector, cb) {
+        el(selector).addEventListener('change', cb);
+      }
+
+      function onClick(selector, cb) {
+        el(selector).addEventListener('click', cb);
+      }
+
       function handler() {
-        var $inputsFilterChecked = getAllInputsFilterActivate();
+        var $inputsFilterChecked = els('.filter[type="checkbox"]:checked');
 
         renderImg(function() {
           $inputsFilterChecked.forEach(function($inputFilterChecked) {
@@ -242,14 +499,6 @@
             runFilter(value);
           })
         });
-      }
-
-      function slice(args) {
-        return Array.prototype.slice.call(args);
-      }
-
-      function getAllInputsFilterActivate() {
-        return slice(document.querySelectorAll('.filter[type="checkbox"]:checked'));
       }
 
       function readFile($input, cb) {       
@@ -264,35 +513,53 @@
         }
       }
       
-      function runFilter(filter) {           
+      function runFilter(filter) {
+        var $canvas = el('canvas');      
         var ctx = $canvas.getContext('2d');
         var arg = null;
 
         if (filter == 'brightness') {
+          var $adjustement = el('#adjustement');
+
           arg = parseInt($adjustement.value, 10);
         } else if (filter == 'blackAndWhite') {
+          var $threshold = el('#threshold');
+
           arg = parseInt($threshold.value, 10)
         } else if (filter == 'noise') {
+          var $factor = el('#factor');
+
           arg = parseInt($factor.value, 10)
         }
 
-        var imgData = filterImage(filters[filter], arg);
+        var imgData = filterImage(Filters[filter], arg);
 
         ctx.putImageData(imgData, 0, 0);
       }
 
-      function renderImg(cb) {       
+      function renderImg(cb) {
+        var $input = el('input');
+
         readFile($input, function(result) {
           var img = new Image();
 
           img.onload = function() {
+            var $inputImgW = el('input#imgW');
+            var $inputImgH = el('input#imgH');
+            var $inputCanW = el('input#canvasW');
+            var $inputCanH = el('input#canvasH');
+            var $inputImgPosX = el('input#imgPosX');
+            var $inputImgPosY = el('input#imgPosY');
+            var $inputImgRatio = el('input#aspectRatio');
+            var $inputImgRotate = el('input#imgRotate');
             var ratio = img.height / img.width;
             var w = parseInt($inputImgW.value, 10) || img.width;
             var h = parseInt($inputImgH.value, 10) || img.height;
             var cw = parseInt($inputCanW.value, 10) || img.width;
             var ch = parseInt($inputCanH.value, 10) || img.height; 
             var x = parseInt($inputImgPosX.value, 10) || 0;
-            var y = parseInt($inputImgPosY.value, 10) || 0;      
+            var y = parseInt($inputImgPosY.value, 10) || 0;   
+            var angle = parseInt($inputImgRotate.value, 10) || 0;   
             var c = getCanvas(cw, ch);
             var ctx = c.getContext('2d');
 
@@ -307,6 +574,10 @@
             $inputImgPosX.value = x;
             $inputImgPosY.value = y;
 
+            if (angle !== 0) {
+              ctx.rotate(angle*Math.PI / 180);
+            }
+            
             ctx.drawImage(img, x, y, w, h);
 
             if (cb) cb();
@@ -317,13 +588,14 @@
       }
 
       function getPixels() {
+        var $canvas = el('canvas');
         var ctx = $canvas.getContext('2d');
 
         return ctx.getImageData(0,0, $canvas.width, $canvas.height);
       }
 
       function getCanvas(w, h) {
-        var c = document.querySelector('canvas');
+        var c = el('canvas');
         
         c.width = w;
         c.height = h;
@@ -342,6 +614,8 @@
       }
 
       function download() {
+        var $canvas = el('canvas');
+
         $link.href = $canvas.toDataURL('image/png');
         $link.download = 'output.png'
       }

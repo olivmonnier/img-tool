@@ -1,0 +1,24 @@
+{
+  "name": "single-file",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "gulp htmlminify"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/olivmonnier/single-file.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/olivmonnier/single-file/issues"
+  },
+  "homepage": "https://github.com/olivmonnier/single-file#readme",
+  "dependencies": {
+    "gulp": "^3.9.1",
+    "gulp-htmlmin": "^3.0.0"
+  }
+}
