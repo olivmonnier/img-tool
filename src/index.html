@@ -575,11 +575,12 @@
             $inputImgPosY.value = y;
 
             if (angle !== 0) {
+              ctx.translate(c.width/2, c.height/2)
               ctx.rotate(angle*Math.PI / 180);
+              ctx.drawImage(img, (x - w/2), (y - h/2), w, h);
+            } else {
+              ctx.drawImage(img, x, y, w, h);
             }
-            
-            ctx.drawImage(img, x, y, w, h);
-
             if (cb) cb();
           }
 
