@@ -10,11 +10,31 @@
         max-width: 100%;
         border: 1px solid #ededed;
       }
+      label[for="file"] {
+        padding: 4px 8px;
+        display: block;
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-align: center;
+        cursor: pointer;
+      }
+      label input[type="file"] {
+        display: none;
+      }
+      .container-fluid {
+        padding-left: 0;
+        padding-right: 0;
+        overflow-x: hidden;
+      }
       .form-inline input {
         max-width: 90px;
       }
       .panel-primary .panel-heading {
         cursor: pointer;
+      }
+      .well {
+        margin-bottom: 0;
       }
     </style>
   </head>
@@ -24,8 +44,10 @@
         <div class="col-sm-4 col-md-3">
           <div class="well">
             <div class="form-group">
-              <label for="file">Choose a file: </label>
-              <input type="file" accept="image/*" id="file"/>
+              <label for="file">
+                Choose a file
+                <input type="file" accept="image/*" id="file"/>
+              </label>
             </div>
   
             <div class="panel panel-primary">
@@ -214,412 +236,405 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
     <script type="text/javascript">
-      /*** INIT ***/
-      els('.filter[type="checkbox"]').forEach(function($inputFilter) {
-        $inputFilter.addEventListener('change', handler);
-      })
-
-      var selectors = [
-        'input', '#adjustement', '#factor', '#threshold', 'input#canvasW', 'input#canvasH', 
-        'input#imgW', 'input#imgH', 'input#aspectRatio', 'input#imgPosX', 'input#imgPosY',
-        'input#ImgRotate'
-      ];
-
-      selectors.forEach(function(selector) {
-        onChange(selector, handler)
-      })
-
-      onClick('a', download);
-
-      el('button#imgPosTop').addEventListener('click', function() {
-        el('#imgPosY').value = 0;
-        handler();
-      });
-
-      el('button#imgPosRight').addEventListener('click', function() {
-        var workSpaceWidth = el('#canvasW').value;
-        var imgWidth = el('#imgW').value;
-
-        el('#imgPosX').value = workSpaceWidth - imgWidth;
-
-        handler();
-      });
-
-      el('button#imgPosBottom').addEventListener('click', function() {
-        var workSpaceHeight = el('#canvasH').value;
-        var imgHeight = el('#imgH').value;
-
-        el('#imgPosY').value = workSpaceHeight - imgHeight;
-
-        handler();
-      });
-
-      el('button#imgPosLeft').addEventListener('click', function() {
-        el('#imgPosX').value = 0;
-        handler();
-      });
-
-      el('button#imgPosCenter').addEventListener('click', function() {
-        var workSpaceWidth = el('#canvasW').value;
-        var imgWidth = el('#imgW').value;
-
-        el('#imgPosX').value = (workSpaceWidth - imgWidth) / 2;
-
-        handler();
-      });
-
-      el('button#imgPosVCenter').addEventListener('click', function() {
-        var workSpaceHeight = el('#canvasH').value;
-        var imgHeight = el('#imgH').value;
-
-        el('#imgPosY').value = (workSpaceHeight - imgHeight) / 2;
-
-        handler();
-      });
-      /************/
-
-      // Filters Algorithm
-        (function (Global) {
-          Global.Filters = {
-            grayscale: function (pixels) {
-              var d = pixels.data;
-
-              for (var i = 0; i < d.length; i += 4) {
-                var r = d[i];
-                var g = d[i + 1];
-                var b = d[i + 2];
-                var v = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-
-                d[i] = d[i + 1] = d[i + 2] = v;
-              };
-
-              return pixels;
-            },
-            sepia: function (pixels) {
-              var d = pixels.data;
-
-              for (var i = 0; i < d.length; i += 4) {
-                var r = d[i];
-                var g = d[i + 1];
-                var b = d[i + 2];
-                var avg = 0.3 * r + 0.59 * g + 0.11 * b;
-
-                d[i] = avg + 100;
-                d[i + 1] = avg + 50;
-                d[i + 2] = avg;
-              };
-
-              return pixels;
-            },
-            invert: function (pixels) {
-              var d = pixels.data;
-
-              for (var i = 0; i < d.length; i += 4) {
-                d[i] = 255 - d[i];
-                d[i + 1] = 255 - d[i + 1];
-                d[i + 2] = 255 - d[i + 2]
-              };
-
-              return pixels;
-            },
-            brightness: function (pixels, adjustement) {
-              var d = pixels.data;
-
-              for (var i = 0; i < d.length; i += 4) {
-                d[i] += adjustement || 40;
-                d[i + 1] += adjustement || 40;
-                d[i + 2] += adjustement || 40;
-              };
-
-              return pixels;
-            },
-            noise: function (pixels, factor) {
-              var d = pixels.data;
-
-              for (var i = 0; i < d.length; i += 4) {
-                var rand = (0.5 - Math.random()) * factor;
-                d[i] = d[i] + rand;
-                d[i + 1] = d[i + 1] + rand;
-                d[i + 2] = d[i + 2] + rand;
-              };
-
-              return pixels;
-            },
-            blackAndWhite: function (pixels, threshold) {
-              var d = pixels.data;
-
-              for (var i = 0; i < d.length; i += 4) {
-                var r = d[i];
-                var g = d[i + 1];
-                var b = d[i + 2];
-                var v =
-                  0.2126 * r + 0.7152 * g + 0.0722 * b >= (threshold || 128) ? 255 : 0;
-
-                d[i] = d[i + 1] = d[i + 2] = v;
-              };
-
-              return pixels;
-            },
-            blur: function (pixels) {
-              var m = [
-                [1, 1, 1],
-                [1, 1, 1],
-                [1, 1, 1]
-              ];
-
-              return convolve(pixels, m);
-            },
-            sharpen: function (pixels) {
-              var m = [
-                [0, -2, 0],
-                [-2, 11, -2],
-                [0, -2, 0]
-              ];
-
-              return convolve(pixels, m);
-            },
-            emboss: function (pixels) {
-              var m = [
-                [2, 0, 0],
-                [0, -1, 0],
-                [0, 0, -1]
-              ];
-
-              return convolve(pixels, m, 127);
-            },
-            lighten: function (pixels) {
-              var m = [
-                [0, 0, 0],
-                [0, 12, 0],
-                [0, 0, 0]
-              ];
-
-              return convolve(pixels, m);
-            },
-            darken: function (pixels) {
-              var m = [
-                [0, 0, 0],
-                [0, 6, 0],
-                [0, 0, 0]
-              ];
-
-              return convolve(pixels, m);
-            },
-            edge: function (pixels) {
-              var m = [
-                [1, 1, 1],
-                [1, -7, 1],
-                [1, 1, 1]
-              ];
-
-              return convolve(pixels, m);
-            },
-            identity: function (pixels) {
-              var m = [
-                [0, 0, 0],
-                [0, 9, 0],
-                [0, 0, 0]
-              ];
-
-              return convolve(pixels, m);
-            }
-          }
-
-          function convolve(pixels, matrix, offset) {
-            var d = pixels.data;
-            var len = d.length;
-            var m = [].concat(matrix[0], matrix[1], matrix[2]);
-            var res = 0;
-            var w = pixels.width;
-
-            for (var i = 0; i < len; i++) {
-              if ((i + 1) % 4 === 0) {
-                continue;
-              }
-
-              res = 0;
-              var these = [
-                d[i - w * 4 - 4] || d[i],
-                d[i - w * 4] || d[i],
-                d[i - w * 4 + 4] || d[i],
-                d[i - 4] || d[i],
-                d[i],
-                d[i + 4] || d[i],
-                d[i + w * 4 - 4] || d[i],
-                d[i + w * 4] || d[i],
-                d[i + w * 4 + 4] || d[i]
-              ];
-
-              for (var j = 0; j < 9; j++) {
-                res += these[j] * m[j];
-              }
-
-              res /= 9;
-
-              if (offset) {
-                res += offset;
-              }
-
-              res = Math.min(Math.max(res, 0), 255);
-
-              d[i] = res
-            }
-
-            return pixels;
-          };
-        }(window));
-
-      function slice(args) {
-        return Array.prototype.slice.call(args);
-      }
-
-      function el(selector) {
-        return document.querySelector(selector);
-      }
-
-      function els(selector) {
-        return slice(document.querySelectorAll(selector));
-      }
-
-      function onChange(selector, cb) {
-        el(selector).addEventListener('change', cb);
-      }
-
-      function onClick(selector, cb) {
-        el(selector).addEventListener('click', cb);
-      }
-
-      function handler() {
-        var $inputsFilterChecked = els('.filter[type="checkbox"]:checked');
-
-        renderImg(function() {
-          $inputsFilterChecked.forEach(function($inputFilterChecked) {
-            var value = $inputFilterChecked.value;
-
-            runFilter(value);
-          })
+      (function(Global) {
+        /*** INIT ***/
+        var selectors = [
+          'input', '#adjustement', '#factor', '#threshold', 'input#canvasW', 'input#canvasH', 
+          'input#imgW', 'input#imgH', 'input#aspectRatio', 'input#imgPosX', 'input#imgPosY',
+          'input#ImgRotate', '.filter[type="checkbox"]'
+        ];
+  
+        selectors.forEach(function(selector) {
+          onChange(selector, handler)
         });
-      }
-
-      function readFile($input, cb) {       
-        if ($input.files && $input.files[0]) {
-          var reader = new FileReader();
-
-          reader.onload = function(e) {
-            cb(e.target.result)
-          }
-
-          reader.readAsDataURL($input.files[0]);
-        }
-      }
-      
-      function runFilter(filter) {
-        var $canvas = el('canvas');      
-        var ctx = $canvas.getContext('2d');
-        var arg = null;
-
-        if (filter == 'brightness') {
-          var $adjustement = el('#adjustement');
-
-          arg = parseInt($adjustement.value, 10);
-        } else if (filter == 'blackAndWhite') {
-          var $threshold = el('#threshold');
-
-          arg = parseInt($threshold.value, 10)
-        } else if (filter == 'noise') {
-          var $factor = el('#factor');
-
-          arg = parseInt($factor.value, 10)
-        }
-
-        var imgData = filterImage(Filters[filter], arg);
-
-        ctx.putImageData(imgData, 0, 0);
-      }
-
-      function renderImg(cb) {
-        var $input = el('input');
-
-        readFile($input, function(result) {
-          var img = new Image();
-
-          img.onload = function() {
-            var $inputImgW = el('input#imgW');
-            var $inputImgH = el('input#imgH');
-            var $inputCanW = el('input#canvasW');
-            var $inputCanH = el('input#canvasH');
-            var $inputImgPosX = el('input#imgPosX');
-            var $inputImgPosY = el('input#imgPosY');
-            var $inputImgRatio = el('input#aspectRatio');
-            var $inputImgRotate = el('input#imgRotate');
-            var ratio = img.height / img.width;
-            var w = parseInt($inputImgW.value, 10) || img.width;
-            var h = parseInt($inputImgH.value, 10) || img.height;
-            var cw = parseInt($inputCanW.value, 10) || img.width;
-            var ch = parseInt($inputCanH.value, 10) || img.height; 
-            var x = parseInt($inputImgPosX.value, 10) || 0;
-            var y = parseInt($inputImgPosY.value, 10) || 0;   
-            var angle = parseInt($inputImgRotate.value, 10) || 0;   
-            var c = getCanvas(cw, ch);
-            var ctx = c.getContext('2d');
-
-            if ($inputImgRatio.checked) {
-              h = w * ratio;
-            }
-
-            $inputImgW.value = w;
-            $inputImgH.value = h;
-            $inputCanW.value = cw;
-            $inputCanH.value = ch;
-            $inputImgPosX.value = x;
-            $inputImgPosY.value = y;
-
-            if (angle !== 0) {
-              ctx.translate(c.width/2, c.height/2)
-              ctx.rotate(angle*Math.PI / 180);
-              ctx.drawImage(img, (x - w/2), (y - h/2), w, h);
-            } else {
-              ctx.drawImage(img, x, y, w, h);
-            }
-            if (cb) cb();
-          }
-
-          img.src = result;
+        onClick('a', download);
+        onClick('button#imgPosTop', function() {
+          $('#imgPosY').value = 0;
+          handler();
+        });
+        onClick('button#imgPosRight', function() {
+          var workSpaceWidth = $('#canvasW').value;
+          var imgWidth = $('#imgW').value;
+  
+          $('#imgPosX').value = workSpaceWidth - imgWidth;
+  
+          handler();
+        });
+        onClick('button#imgPosBottom', function() {
+          var workSpaceHeight = $('#canvasH').value;
+          var imgHeight = $('#imgH').value;
+  
+          $('#imgPosY').value = workSpaceHeight - imgHeight;
+  
+          handler();
+        });
+        onClick('button#imgPosLeft', function() {
+          $('#imgPosX').value = 0;
+          handler();
+        });
+        onClick('button#imgPosCenter', function() {
+          var workSpaceWidth = $('#canvasW').value;
+          var imgWidth = $('#imgW').value;
+  
+          $('#imgPosX').value = (workSpaceWidth - imgWidth) / 2;
+  
+          handler();
+        });
+        onClick('button#imgPosVCenter', function() {
+          var workSpaceHeight = $('#canvasH').value;
+          var imgHeight = $('#imgH').value;
+  
+          $('#imgPosY').value = (workSpaceHeight - imgHeight) / 2;
+  
+          handler();
         })
-      }
-
-      function getPixels() {
-        var $canvas = el('canvas');
-        var ctx = $canvas.getContext('2d');
-
-        return ctx.getImageData(0,0, $canvas.width, $canvas.height);
-      }
-
-      function getCanvas(w, h) {
-        var c = el('canvas');
-        
-        c.width = w;
-        c.height = h;
-
-        return c;
-      }
-
-      function filterImage(filter, var_args) {
-        var args = [getPixels()];
-
-        for(var i = 1; i < arguments.length; i++) {
-          args.push(arguments[i]);
+        /************/
+  
+        // Filters Algorithm
+        Global.Filters = {
+          grayscale: function (pixels) {
+            var d = pixels.data;
+  
+            for (var i = 0; i < d.length; i += 4) {
+              var r = d[i];
+              var g = d[i + 1];
+              var b = d[i + 2];
+              var v = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  
+              d[i] = d[i + 1] = d[i + 2] = v;
+            };
+  
+            return pixels;
+          },
+          sepia: function (pixels) {
+            var d = pixels.data;
+  
+            for (var i = 0; i < d.length; i += 4) {
+              var r = d[i];
+              var g = d[i + 1];
+              var b = d[i + 2];
+              var avg = 0.3 * r + 0.59 * g + 0.11 * b;
+  
+              d[i] = avg + 100;
+              d[i + 1] = avg + 50;
+              d[i + 2] = avg;
+            };
+  
+            return pixels;
+          },
+          invert: function (pixels) {
+            var d = pixels.data;
+  
+            for (var i = 0; i < d.length; i += 4) {
+              d[i] = 255 - d[i];
+              d[i + 1] = 255 - d[i + 1];
+              d[i + 2] = 255 - d[i + 2]
+            };
+  
+            return pixels;
+          },
+          brightness: function (pixels, adjustement) {
+            var d = pixels.data;
+  
+            for (var i = 0; i < d.length; i += 4) {
+              d[i] += adjustement || 40;
+              d[i + 1] += adjustement || 40;
+              d[i + 2] += adjustement || 40;
+            };
+  
+            return pixels;
+          },
+          noise: function (pixels, factor) {
+            var d = pixels.data;
+  
+            for (var i = 0; i < d.length; i += 4) {
+              var rand = (0.5 - Math.random()) * factor;
+              d[i] = d[i] + rand;
+              d[i + 1] = d[i + 1] + rand;
+              d[i + 2] = d[i + 2] + rand;
+            };
+  
+            return pixels;
+          },
+          blackAndWhite: function (pixels, threshold) {
+            var d = pixels.data;
+  
+            for (var i = 0; i < d.length; i += 4) {
+              var r = d[i];
+              var g = d[i + 1];
+              var b = d[i + 2];
+              var v =
+                0.2126 * r + 0.7152 * g + 0.0722 * b >= (threshold || 128) ? 255 : 0;
+  
+              d[i] = d[i + 1] = d[i + 2] = v;
+            };
+  
+            return pixels;
+          },
+          blur: function (pixels) {
+            var m = [
+              [1, 1, 1],
+              [1, 1, 1],
+              [1, 1, 1]
+            ];
+  
+            return convolve(pixels, m);
+          },
+          sharpen: function (pixels) {
+            var m = [
+              [0, -2, 0],
+              [-2, 11, -2],
+              [0, -2, 0]
+            ];
+  
+            return convolve(pixels, m);
+          },
+          emboss: function (pixels) {
+            var m = [
+              [2, 0, 0],
+              [0, -1, 0],
+              [0, 0, -1]
+            ];
+  
+            return convolve(pixels, m, 127);
+          },
+          lighten: function (pixels) {
+            var m = [
+              [0, 0, 0],
+              [0, 12, 0],
+              [0, 0, 0]
+            ];
+  
+            return convolve(pixels, m);
+          },
+          darken: function (pixels) {
+            var m = [
+              [0, 0, 0],
+              [0, 6, 0],
+              [0, 0, 0]
+            ];
+  
+            return convolve(pixels, m);
+          },
+          edge: function (pixels) {
+            var m = [
+              [1, 1, 1],
+              [1, -7, 1],
+              [1, 1, 1]
+            ];
+  
+            return convolve(pixels, m);
+          },
+          identity: function (pixels) {
+            var m = [
+              [0, 0, 0],
+              [0, 9, 0],
+              [0, 0, 0]
+            ];
+  
+            return convolve(pixels, m);
+          }
         }
-
-        return filter.apply(null, args);
-      }
-
-      function download() {
-        var $canvas = el('canvas');
-
-        $link.href = $canvas.toDataURL('image/png');
-        $link.download = 'output.png'
-      }
+  
+        function convolve(pixels, matrix, offset) {
+          var d = pixels.data;
+          var len = d.length;
+          var m = [].concat(matrix[0], matrix[1], matrix[2]);
+          var res = 0;
+          var w = pixels.width;
+  
+          for (var i = 0; i < len; i++) {
+            if ((i + 1) % 4 === 0) {
+              continue;
+            }
+  
+            res = 0;
+            var these = [
+              d[i - w * 4 - 4] || d[i],
+              d[i - w * 4] || d[i],
+              d[i - w * 4 + 4] || d[i],
+              d[i - 4] || d[i],
+              d[i],
+              d[i + 4] || d[i],
+              d[i + w * 4 - 4] || d[i],
+              d[i + w * 4] || d[i],
+              d[i + w * 4 + 4] || d[i]
+            ];
+  
+            for (var j = 0; j < 9; j++) {
+              res += these[j] * m[j];
+            }
+  
+            res /= 9;
+  
+            if (offset) {
+              res += offset;
+            }
+  
+            res = Math.min(Math.max(res, 0), 255);
+  
+            d[i] = res
+          }
+  
+          return pixels;
+        };
+  
+        function slice(args) {
+          return Array.prototype.slice.call(args);
+        }
+  
+        function $(selector) {
+          return document.querySelector(selector);
+        }
+  
+        function $$(selector) {
+          return slice(document.querySelectorAll(selector));
+        }
+  
+        function onChange(selector, cb) {
+          $$(selector).forEach(function(el) {
+            el.addEventListener('change', cb);
+          });
+        }
+  
+        function onClick(selector, cb) {
+          $$(selector).forEach(function(el) {
+            el.addEventListener('click', cb);
+          });
+        }
+  
+        function handler() {
+          var $inputsFilterChecked = $$('.filter[type="checkbox"]:checked');
+  
+          renderImg(function() {
+            $inputsFilterChecked.forEach(function($inputFilterChecked) {
+              var value = $inputFilterChecked.value;
+  
+              runFilter(value);
+            })
+          });
+        }
+  
+        function readFile($input, cb) {       
+          if ($input.files && $input.files[0]) {
+            var reader = new FileReader();
+  
+            reader.onload = function(e) {
+              cb(e.target.result)
+            }
+  
+            reader.readAsDataURL($input.files[0]);
+          }
+        }
+        
+        function runFilter(filter) {
+          var $canvas = $('canvas');      
+          var ctx = $canvas.getContext('2d');
+          var arg = null;
+  
+          if (filter == 'brightness') {
+            var $adjustement = $('#adjustement');
+  
+            arg = parseInt($adjustement.value, 10);
+          } else if (filter == 'blackAndWhite') {
+            var $threshold = $('#threshold');
+  
+            arg = parseInt($threshold.value, 10)
+          } else if (filter == 'noise') {
+            var $factor = $('#factor');
+  
+            arg = parseInt($factor.value, 10)
+          }
+  
+          var imgData = filterImage(Filters[filter], arg);
+  
+          ctx.putImageData(imgData, 0, 0);
+        }
+  
+        function renderImg(cb) {
+          var $input = $('input');
+  
+          readFile($input, function(result) {
+            var img = new Image();
+  
+            img.onload = function() {
+              var $inputImgW = $('input#imgW');
+              var $inputImgH = $('input#imgH');
+              var $inputCanW = $('input#canvasW');
+              var $inputCanH = $('input#canvasH');
+              var $inputImgPosX = $('input#imgPosX');
+              var $inputImgPosY = $('input#imgPosY');
+              var $inputImgRatio = $('input#aspectRatio');
+              var $inputImgRotate = $('input#imgRotate');
+              var ratio = img.height / img.width;
+              var w = parseInt($inputImgW.value, 10) || img.width;
+              var h = parseInt($inputImgH.value, 10) || img.height;
+              var cw = parseInt($inputCanW.value, 10) || img.width;
+              var ch = parseInt($inputCanH.value, 10) || img.height; 
+              var x = parseInt($inputImgPosX.value, 10) || 0;
+              var y = parseInt($inputImgPosY.value, 10) || 0;   
+              var angle = parseInt($inputImgRotate.value, 10) || 0;   
+              var c = getCanvas(cw, ch);
+              var ctx = c.getContext('2d');
+  
+              if ($inputImgRatio.checked) {
+                h = w * ratio;
+              }
+  
+              $inputImgW.value = w;
+              $inputImgH.value = h;
+              $inputCanW.value = cw;
+              $inputCanH.value = ch;
+              $inputImgPosX.value = x;
+              $inputImgPosY.value = y;
+  
+              if (angle !== 0) {
+                ctx.translate(c.width/2, c.height/2)
+                ctx.rotate(angle*Math.PI / 180);
+                ctx.drawImage(img, (x - w/2), (y - h/2), w, h);
+              } else {
+                ctx.drawImage(img, x, y, w, h);
+              }
+              if (cb) cb();
+            }
+  
+            img.src = result;
+          })
+        }
+  
+        function getPixels() {
+          var $canvas = $('canvas');
+          var ctx = $canvas.getContext('2d');
+  
+          return ctx.getImageData(0,0, $canvas.width, $canvas.height);
+        }
+  
+        function getCanvas(w, h) {
+          var c = $('canvas');
+          
+          c.width = w;
+          c.height = h;
+  
+          return c;
+        }
+  
+        function filterImage(filter, var_args) {
+          var args = [getPixels()];
+  
+          for(var i = 1; i < arguments.length; i++) {
+            args.push(arguments[i]);
+          }
+  
+          return filter.apply(null, args);
+        }
+  
+        function download() {
+          var $canvas = $('canvas');
+  
+          $link.href = $canvas.toDataURL('image/png');
+          $link.download = 'output.png'
+        }
+      }(window));
     </script>
   </body>
 </html>
