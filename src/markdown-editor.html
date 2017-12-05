@@ -1,0 +1,133 @@
+<html>
+  <head>
+    <title>Markdown Editor</title>
+    <meta content="width=device-width,initial-scale=1" name="viewport">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <style>
+      html, body {
+        height: 100%;
+      }
+      body > .container-fluid {
+        padding-left: 0;
+        padding-right: 0;
+        overflow-x: hidden;
+      }
+      body > .container-fluid, body > .container-fluid > .row, body > .container-fluid > .row > [class*="col-"], textarea {
+        height: calc(100% - 80px);
+      }
+      textarea {
+        padding: 20px;
+        width: 100%;
+        resize: none;
+        border: none;
+        outline: none;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <span class="navbar-brand">Markdown Editor</span>
+        </div>   
+        <div class="navbar-collapse">
+          <div class="navbar-right">
+            <button class="btn btn-primary navbar-btn">Export</button>
+          </div>
+        </div>     
+      </div>
+    </nav>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-6">
+          <textarea placeholder="Enter something..."></textarea>
+        </div>
+        <div class="col-md-6">
+          <div id="preview"></div>
+        </div>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+      crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+      (function() {
+        /*** INIT ***/
+        onKeyUp('textarea', function(e) {
+          var output = render(e.target.value);
+
+          $('#preview').innerHTML = output;
+        });
+        onClick('.btn-primary', function() {
+          var output = render($('textarea').value);
+          var $link = document.createElement('a');
+
+          $link.setAttribute('download', 'output.html');
+          $link.setAttribute('href', 'data:text/html;charset=utf-8,' + encodeURIComponent(layout(output)));
+
+          $link.click();
+        });
+        /***********/
+        var rules = [
+          { regex: /(#+)(.*)/g, replacement: header },                                         // headers
+          { regex: /!\[([^\[]+)\]\(([^\)]+)\)/g, replacement: '<img src=\'$2\' alt=\'$1\'>' }, // image
+          { regex: /\[([^\[]+)\]\(([^\)]+)\)/g, replacement: '<a href=\'$2\'>$1</a>' },        // hyperlink
+          { regex: /(\*\*|__)(.*?)\1/g, replacement: '<strong>$2</strong>' },                  // bold
+          { regex: /(\*|_)(.*?)\1/g, replacement: '<em>$2</em>' },                             // emphasis
+          { regex: /\~\~(.*?)\~\~/g, replacement: '<del>$1</del>' },                           // del
+          { regex: /\:\"(.*?)\"\:/g, replacement: '<q>$1</q>' },                               // quote
+          { regex: /`(.*?)`/g, replacement: '<code>$1</code>' },                               // inline code
+          { regex: /\n\*(.*)/g, replacement: ulList },                                         // ul lists
+          { regex: /\n[0-9]+\.(.*)/g, replacement: olList },                                   // ol lists
+          { regex: /\n(&gt;|\>)(.*)/g, replacement: blockquote },                              // blockquotes
+          { regex: /\n-{5,}/g, replacement: '\n<hr />' },                                      // horizontal rule
+          { regex: /\n([^\n]+)\n/g, replacement: para },                                       // add paragraphs
+          { regex: /<\/ul>\s?<ul>/g, replacement: '' },                                        // fix extra ul
+          { regex: /<\/ol>\s?<ol>/g, replacement: '' },                                        // fix extra ol
+          { regex: /<\/blockquote><blockquote>/g, replacement: '\n' }                          // fix extra blockquote
+        ]
+        function $(selector) {
+          return document.querySelector(selector)
+        }
+        function onKeyUp(selector, cb) {
+          $(selector).addEventListener('keyup', cb)
+        }
+        function onClick(selector, cb) {
+          $(selector).addEventListener('click', cb)
+        }
+        function render(text) {
+          text = '\n' + text + '\n';
+          rules.forEach(function(rule) {
+            text = text.replace(rule.regex, rule.replacement);
+          });
+          return text.trim();
+        }
+        function layout(html) {
+          return '<html>\n\t<head></head>\n\t<body>\n' + html + '\n\t</body>\n</html>';
+        }
+        function para(text, line) {
+          var trimmed = line.trim();
+
+          if (/^<\/?(ul|ol|li|h|p|bl)/i.test(trimmed)) {
+            return '\n' + line + '\n';
+          }
+          return '\n<p>' + trimmed + '</p>\n';
+        }
+        function ulList(text, item) {
+          return '\n<ul>\n\t<li>' + item.trim() + '</li>\n</ul>';
+        }
+        function olList(text, item) {
+          return '\n<ol>\n\t<li>' + item.trim() + '</li>\n</ol>';
+        }
+        function blockquote(text, tmp, item) {
+          return '\n<blockquote>' + item.trim() + '</blockquote>';
+        }
+        function header(text, chars, content) {
+          var level = chars.length;
+
+          return '<h' + level + '>' + content.trim() + '</h' + level + '>';
+        }
+      }());
+    </script>
+  </body>
+</html>
