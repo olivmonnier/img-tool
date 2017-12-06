@@ -15,16 +15,20 @@
       body > .container-fluid {
         height: calc(100% - 80px);
       }
-      body > .container-fluid > .row, body > .container-fluid > .row > [class*="col-"], textarea, #preview {
+      body > .container-fluid > .row, body > .container-fluid > .row > [class*="col-"], iframe {
         height: 100%;
         overflow-y: auto;
       }
-      textarea {
-        padding: 20px;
-        width: 100%;
-        resize: none;
+      iframe, textarea {
         border: none;
+        width: 100%;
+      }
+      textarea {
+        height: calc(100% - 42px);
+        padding: 20px;
+        resize: none;
         outline: none;
+        overflow-y: auto;
       }
     </style>
   </head>
@@ -44,30 +48,57 @@
     <div class="container-fluid">
       <div class="row">
         <div class="col-md-6">
-          <textarea placeholder="Enter something..."></textarea>
+          <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active">
+              <a href="#markdown" aria-controls="markdown" role="tab" data-toggle="tab">
+                Markdown
+              </a>
+            </li>
+            <li role="presentation">
+              <a href="#css" aria-controls="css" role="tab" data-toggle="tab">
+                Css
+              </a>
+            </li>
+          </ul>
+          
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="markdown">
+              <textarea placeholder="Enter something..."></textarea>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="css">
+              <textarea placeholder="Enter something..."></textarea>
+            </div>
+          </div>
         </div>
         <div class="col-md-6">
-          <div id="preview"></div>
+          <iframe></iframe>>
         </div>
       </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
       crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+      crossorigin="anonymous"></script>
     <script type="text/javascript">
       (function() {
         /*** INIT ***/
         onKeyUp('textarea', function(e) {
-          var output = render(e.target.value);
+          var $iframeDoc = $('iframe').contentWindow.document;
+          var md = $('#markdown textarea').value;
+          var css = $('#css textarea').value;
+          var output = build(md);
 
-          $('#preview').innerHTML = output;
+          $iframeDoc.open();
+          $iframeDoc.write(layout(output, css));
+          $iframeDoc.close();
         });
         onClick('.btn-primary', function() {
-          var output = render($('textarea').value);
+          var css = $('#css textarea').value;
+          var output = build($('#markdown textarea').value);
           var $link = document.createElement('a');
 
           $link.setAttribute('download', 'output.html');
-          $link.setAttribute('href', 'data:text/html;charset=utf-8,' + encodeURIComponent(layout(output)));
+          $link.setAttribute('href', 'data:text/html;charset=utf-8,' + encodeURIComponent(layout(output, css)));
 
           $link.click();
         });
@@ -90,24 +121,34 @@
           { regex: /<\/ol>\s?<ol>/g, replacement: '' },                                        // fix extra ol
           { regex: /<\/blockquote><blockquote>/g, replacement: '\n' }                          // fix extra blockquote
         ]
+        function slice(args) {
+          return Array.prototype.slice.call(args);
+        }
         function $(selector) {
           return document.querySelector(selector)
         }
+        function $$(selector) {
+          return slice(document.querySelectorAll(selector));
+        }
         function onKeyUp(selector, cb) {
-          $(selector).addEventListener('keyup', cb)
+          $$(selector).forEach(function (el) {
+            el.addEventListener('keyup', cb)
+          });
         }
         function onClick(selector, cb) {
-          $(selector).addEventListener('click', cb)
+          $$(selector).forEach(function (el) {
+            el.addEventListener('click', cb)
+          });
         }
-        function render(text) {
+        function build(text) {
           text = '\n' + text + '\n';
           rules.forEach(function(rule) {
             text = text.replace(rule.regex, rule.replacement);
           });
           return text.trim();
         }
-        function layout(html) {
-          return '<html>\n\t<head></head>\n\t<body>\n' + html + '\n\t</body>\n</html>';
+        function layout(html, css) {
+          return '<html>\n\t<head>\n\t\t<style>\n ' + (css || '') + '\n</style></head>\n\t<body>\n' + (html || '') + '\n\t</body>\n</html>';
         }
         function para(text, line) {
           var trimmed = line.trim();

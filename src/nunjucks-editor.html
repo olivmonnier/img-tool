@@ -1,0 +1,164 @@
+<html>
+  <head>
+    <title>Nunjucks Editor</title>
+    <meta content="width=device-width,initial-scale=1" name="viewport">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <style>
+      html, body {
+        height: 100%;
+      }
+      body > .container-fluid {
+        padding-left: 0;
+        padding-right: 0;
+        overflow-x: hidden;
+      }
+      body > .container-fluid {
+        height: calc(100% - 80px);
+      }
+      body > .container-fluid > .row, body > .container-fluid > .row > [class*="col-"], iframe {
+        height: 100%;
+        overflow-y: auto;
+      }
+      iframe, textarea {
+        border: none;
+        width: 100%;
+      }
+      textarea {
+        height: calc(100% - 42px);
+        padding: 20px;
+        resize: none;
+        outline: none;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <span class="navbar-brand">Nunjucks Editor</span>
+        </div>
+        <div class="navbar-collapse">
+          <div class="navbar-right">
+            <button class="btn btn-primary navbar-btn">Export</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-6">
+          <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active">
+              <a href="#template" aria-controls="template" role="tab" data-toggle="tab">
+                Template
+              </a>
+            </li>
+            <li role="presentation">
+              <a href="#css" aria-controls="css" role="tab" data-toggle="tab">
+                Css
+              </a>
+            </li>
+            <li role="presentation">
+              <a href="#json" aria-controls="json" role="tab" data-toggle="tab">
+                Json
+              </a>
+            </li>
+          </ul>
+
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="template">
+              <textarea placeholder="Enter something..."></textarea>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="css">
+              <textarea placeholder="Enter something..."></textarea>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="json">
+              <textarea placeholder="Enter something..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <iframe></iframe>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+      crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+      crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nunjucks/3.0.1/nunjucks.min.js" integrity="sha256-sh9FYQZVVLprCQB3/IcNyCRrZwu9hZ+xLHhUszDfsK4="
+      crossorigin="anonymous"></script>
+    
+    <script type="text/javascript">
+      (function(Global) {
+        var njk = Global.nunjucks.configure({ autoescape: true });
+        /*** INIT ***/
+        onKeyUp('textarea', function(e) {
+          return render(prepare())
+        })
+        onClick('.btn-primary', function () {
+          var output = prepare();
+
+          $link.setAttribute('download', 'output.html');
+          $link.setAttribute('href', 'data:text/html;charset=utf-8,' + encodeURIComponent(output));
+
+          $link.click();
+        });
+        /************/
+        function slice(args) {
+          return Array.prototype.slice.call(args);
+        }
+        function $(selector) {
+          return document.querySelector(selector)
+        }
+        function $$(selector) {
+          return slice(document.querySelectorAll(selector));
+        }
+        function onKeyUp(selector, cb) {
+          $$(selector).forEach(function(el){
+            el.addEventListener('keyup', cb)
+          });
+        }
+        function onClick(selector, cb) {
+          $$(selector).forEach(function(el) {
+            el.addEventListener('click', cb)
+          });
+        }
+        function layout(html, css) {
+          return '<html>\n\t<head>\n\t\t<style>\n ' + (css || '') + '\n</style></head>\n\t<body>\n' + (html || '') + '\n\t</body>\n</html>';
+        }
+        function toJson(json) {
+          try {
+            return JSON.parse(json)
+          } catch (e) {
+            return {}
+          }
+        }
+        function prepare() {
+          var template = $('#template textarea').value;
+          var css = $('#css textarea').value;
+          var data = toJson($('#json textarea').value);
+
+          return layout(build(template, data), css);
+        }
+        function render(htmlstring) {
+          var $iframeDoc = $('iframe').contentWindow.document;
+
+          $iframeDoc.open();
+          $iframeDoc.write(htmlstring);
+          $iframeDoc.close();
+        }
+        function build(text, data) {
+          try {
+            return njk.renderString(text, data || {})
+          } catch (e) {
+            return null;
+          }
+        }
+      }(window));
+    </script>
+  </body>
+</html>
